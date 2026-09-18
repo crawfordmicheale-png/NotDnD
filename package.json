@@ -1,0 +1,24 @@
+{
+  "name": "ashfall",
+  "version": "0.1.0",
+  "description": "ASHFALL - a top-down hack and slash RPG set in a fantasy wasteland, 300 years after the Collapse.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crawfordmicheale-png/NotDnD.git"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  }
+}
