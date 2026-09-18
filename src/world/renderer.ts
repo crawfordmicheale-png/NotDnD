@@ -107,6 +107,10 @@ function drawTile(g: CanvasRenderingContext2D, world: World, wx: number, wy: num
   const r2 = hash2(wx * 7 + 3, wy * 13 + 5);
   g.fillStyle = groundColor(t);
   g.fillRect(px, py, TILE, TILE);
+  // Subtle per-tile tonal drift so open flats don't read as a flat colour.
+  const r3 = hash2(wx * 3 + 11, wy * 5 + 17);
+  g.fillStyle = r3 > 0.5 ? `rgba(255,240,220,${(r3 - 0.5) * 0.12})` : `rgba(0,0,0,${(0.5 - r3) * 0.18})`;
+  g.fillRect(px, py, TILE, TILE);
 
   switch (t) {
     case Tile.Ash:

@@ -653,6 +653,8 @@ export class Game {
       }
     }
 
+    if (best) return; // gear on the ground takes priority over the camp prompts
+
     if (dist(p.x, p.y, this.campfire.x, this.campfire.y) < 70) {
       this.prompt = "[E] Rest at the Hearth — restore health, stamina and glow";
       if (input.wasPressed("KeyE")) this.rest();
