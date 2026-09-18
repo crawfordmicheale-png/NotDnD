@@ -28,8 +28,8 @@ export interface EnemyDef {
 }
 
 export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
-  scav: { id: "scav", name: "Scav Raider", hp: 34, speed: 108, damage: 9, r: 12, attackRange: 40, attackCooldown: 1.1, windup: 0.45, armor: 0, xp: 12, scrap: [2, 6], aggroRange: 330, behavior: "melee", color: "#b08a5a", mass: 1 },
-  hound: { id: "hound", name: "Ash Hound", hp: 22, speed: 175, damage: 7, r: 10, attackRange: 120, attackCooldown: 1.5, windup: 0.35, armor: 0, xp: 10, scrap: [0, 2], aggroRange: 400, behavior: "lunge", color: "#6d5a4d", mass: 0.7 },
+  scav: { id: "scav", name: "Scav Raider", hp: 32, speed: 108, damage: 8, r: 12, attackRange: 40, attackCooldown: 1.2, windup: 0.5, armor: 0, xp: 12, scrap: [2, 6], aggroRange: 330, behavior: "melee", color: "#b08a5a", mass: 1 },
+  hound: { id: "hound", name: "Ash Hound", hp: 20, speed: 175, damage: 6, r: 10, attackRange: 120, attackCooldown: 1.6, windup: 0.4, armor: 0, xp: 10, scrap: [0, 2], aggroRange: 400, behavior: "lunge", color: "#6d5a4d", mass: 0.7 },
   husk: { id: "husk", name: "Glow Husk", hp: 72, speed: 66, damage: 17, r: 14, attackRange: 44, attackCooldown: 1.6, windup: 0.7, armor: 0, xp: 20, scrap: [1, 4], aggroRange: 280, behavior: "melee", color: "#6f8a5c", mass: 1.4 },
   spitter: { id: "spitter", name: "Bile Spitter", hp: 40, speed: 92, damage: 11, r: 13, attackRange: 280, attackCooldown: 2.2, windup: 0.6, armor: 0, xp: 18, scrap: [2, 5], aggroRange: 380, behavior: "ranged", color: "#8b5c9e", mass: 1 },
   rust: { id: "rust", name: "Rustknight", hp: 130, speed: 78, damage: 23, r: 16, attackRange: 50, attackCooldown: 1.5, windup: 0.6, armor: 5, xp: 42, scrap: [6, 12], aggroRange: 300, behavior: "melee", color: "#8a5a3a", mass: 2.5 },

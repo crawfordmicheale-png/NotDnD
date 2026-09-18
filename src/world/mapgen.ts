@@ -60,7 +60,7 @@ export function generateMap(seed: number, opts: MapGenOptions = {}): MapData {
       let tile: Tile = Tile.Ash;
       if (e > 0.62) tile = Tile.Cracked;
       if (e > 0.58 && d > 0.55) tile = Tile.Cracked;
-      if (e < 0.4 && t > 0.62) tile = Tile.Toxic;
+      if (e < 0.38 && t > 0.66) tile = Tile.Toxic;
       if (e > 0.72 && d > 0.62) tile = Tile.Rock;
       if (e > 0.76) tile = Tile.Rock;
       const f = forest.fbm(x / 14, y / 14, 3);
@@ -74,6 +74,14 @@ export function generateMap(seed: number, opts: MapGenOptions = {}): MapData {
   // --- Key locations ------------------------------------------------------
   const hearth: TilePos = { x: Math.floor(w * 0.12), y: Math.floor(h * 0.5) + rng.int(-8, 8) };
   const bossDen: TilePos = { x: Math.floor(w * 0.88), y: Math.floor(h * 0.5) + rng.int(-10, 10) };
+
+  // The land around the Hearth was drained long ago: no sludge near the starting camp.
+  for (let y = hearth.y - 28; y <= hearth.y + 28; y++) {
+    for (let x = hearth.x - 28; x <= hearth.x + 28; x++) {
+      if (!inBounds(x, y) || Math.hypot(x - hearth.x, y - hearth.y) > 28) continue;
+      if (get(x, y) === Tile.Toxic) set(x, y, rng.chance(0.5) ? Tile.Scorched : Tile.Ash);
+    }
+  }
 
   // --- Old highways (also guarantee hearth <-> den connectivity) -----------
   const carveRoad = (from: TilePos, to: TilePos, width: number, wobble: number) => {

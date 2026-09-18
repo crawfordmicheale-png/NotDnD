@@ -123,14 +123,14 @@ function drawTitle(ctx: CanvasRenderingContext2D, g: Game, W: number, H: number)
   ctx.textAlign = "center";
   ctx.fillText("Press Enter or click to begin", W / 2, H * 0.3 + 230);
 
-  const cw = 560;
+  const cw = Math.min(640, W - 40);
   const cx = (W - cw) / 2;
   const cy = H * 0.3 + 258;
   panel(ctx, cx, cy, cw, 176, 0.6);
-  const left = ["WASD / arrows — move", "Mouse — aim", "Left click (hold) — light attack", "Right click / Shift+click — heavy attack", "Space — dodge roll (i-frames)", "1 / 2 — canned food / glow shard"];
+  const left = ["WASD / arrows — move", "Mouse — aim", "Left click (hold) — light attack", "Right click — heavy attack", "Space — dodge roll (i-frames)", "1 / 2 — canned food / glow shard"];
   const right = ["Q — Ember Bolt", "R — Ashen Nova", "E — interact / take gear", "F — salvage gear for scrap", "Tab — character sheet", "N — new wasteland seed"];
   lines(ctx, left, cx + 22, cy + 30, 22, "#d8cfbe", 13);
-  lines(ctx, right, cx + cw / 2 + 10, cy + 30, 22, "#d8cfbe", 13);
+  lines(ctx, right, cx + cw * 0.56, cy + 30, 22, "#d8cfbe", 13);
 
   ctx.textAlign = "center";
   ctx.font = `12px ${FONT}`;

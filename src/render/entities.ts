@@ -583,6 +583,13 @@ export function drawPickup(ctx: CanvasRenderingContext2D, p: Pickup, time: numbe
 }
 
 export function drawChest(ctx: CanvasRenderingContext2D, c: Chest, time: number): void {
+  if (!c.opened) {
+    const g = 0.18 + Math.sin(time * 3 + c.x) * 0.08;
+    ctx.fillStyle = `rgba(255,200,100,${g})`;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, 22, 0, Math.PI * 2);
+    ctx.fill();
+  }
   shadow(ctx, c.x, c.y + 8, 14, 5);
   ctx.fillStyle = c.opened ? "#4a3a2c" : "#6e4a2a";
   ctx.fillRect(c.x - 13, c.y - 6, 26, 16);
@@ -591,13 +598,6 @@ export function drawChest(ctx: CanvasRenderingContext2D, c: Chest, time: number)
   ctx.fillStyle = "#b8873a";
   ctx.fillRect(c.x - 13, c.y - 4, 26, 2);
   ctx.fillRect(c.x - 2, c.y - 6, 4, 5);
-  if (!c.opened) {
-    const g = 0.4 + Math.sin(time * 3 + c.x) * 0.25;
-    ctx.fillStyle = `rgba(255,200,100,${g})`;
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, 18, 0, Math.PI * 2);
-    ctx.fill();
-  }
 }
 
 export function drawCampfire(ctx: CanvasRenderingContext2D, x: number, y: number, time: number): void {

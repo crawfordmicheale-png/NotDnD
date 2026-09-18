@@ -1137,7 +1137,7 @@ export class Game {
   /** Ambient darkness follows a slow day/night cycle. */
   get ambientDarkness(): number {
     const cycle = (Math.sin(this.runTime / 70) + 1) / 2;
-    return 0.42 + cycle * 0.3;
+    return 0.22 + cycle * 0.26;
   }
 
   // -------------------------------------------------------------------------
@@ -1219,7 +1219,7 @@ export class Game {
       lc.fillRect(s.x - r * cam.zoom, s.y - r * cam.zoom, r * 2 * cam.zoom, r * 2 * cam.zoom);
     };
 
-    if (!this.player.dead) light(this.player.x, this.player.y, 330, 1);
+    if (!this.player.dead) light(this.player.x, this.player.y, 430, 1);
     const flicker = 1 + Math.sin(this.time * 11) * 0.06;
     light(this.campfire.x, this.campfire.y, 260 * flicker, 1);
     light(this.trader.x, this.trader.y, 90, 0.7);
@@ -1258,7 +1258,7 @@ export class Game {
     // Vignette
     const vg = this.ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
     vg.addColorStop(0, "rgba(0,0,0,0)");
-    vg.addColorStop(1, "rgba(0,0,0,0.55)");
+    vg.addColorStop(1, "rgba(0,0,0,0.42)");
     this.ctx.fillStyle = vg;
     this.ctx.fillRect(0, 0, W, H);
   }

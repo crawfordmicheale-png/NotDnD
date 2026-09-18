@@ -32,7 +32,7 @@ export const TILE_INFO: Record<Tile, TileInfo> = {
   [Tile.Road]: { name: "Old Highway", solid: false, speed: 1.1, hazard: 0 },
   [Tile.RubbleFloor]: { name: "Rubble", solid: false, speed: 0.9, hazard: 0 },
   [Tile.HearthFloor]: { name: "Hearth Stone", solid: false, speed: 1, hazard: 0 },
-  [Tile.Toxic]: { name: "Glow Sludge", solid: false, speed: 0.55, hazard: 6 },
+  [Tile.Toxic]: { name: "Glow Sludge", solid: false, speed: 0.6, hazard: 4 },
   [Tile.Bones]: { name: "Bonefield", solid: false, speed: 1, hazard: 0 },
   [Tile.Wall]: { name: "Ruined Wall", solid: true, speed: 0, hazard: 0 },
   [Tile.Rock]: { name: "Boulder", solid: true, speed: 0, hazard: 0 },

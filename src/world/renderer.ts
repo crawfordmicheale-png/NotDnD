@@ -74,30 +74,30 @@ export class TileRenderer {
 function groundColor(t: Tile): string {
   switch (t) {
     case Tile.Ash:
-      return "#3b3633";
+      return "#4a443f";
     case Tile.Cracked:
-      return "#5b4a3a";
+      return "#6a5643";
     case Tile.Road:
-      return "#2b2a2c";
+      return "#37363a";
     case Tile.RubbleFloor:
-      return "#48423e";
+      return "#544d48";
     case Tile.HearthFloor:
-      return "#5a4f47";
+      return "#665a51";
     case Tile.Toxic:
       return "#2f5a24";
     case Tile.Bones:
-      return "#3b3633";
+      return "#4a443f";
     case Tile.Scorched:
-      return "#241f1d";
+      return "#2e2826";
     case Tile.Void:
       return "#050404";
     case Tile.Wall:
-      return "#48423e";
+      return "#544d48";
     case Tile.Rock:
     case Tile.DeadTree:
     case Tile.Wreck:
     case Tile.Crystal:
-      return "#3b3633";
+      return "#4a443f";
   }
 }
 
@@ -116,9 +116,9 @@ function drawTile(g: CanvasRenderingContext2D, world: World, wx: number, wy: num
     case Tile.Crystal:
     case Tile.Bones: {
       // Ash speckles and gentle drifts.
-      g.fillStyle = r > 0.5 ? "#433d39" : "#35302d";
+      g.fillStyle = r > 0.5 ? "#524b46" : "#413b37";
       g.fillRect(px + Math.floor(r * 20), py + Math.floor(r2 * 20), 8 + Math.floor(r * 8), 3 + Math.floor(r2 * 3));
-      g.fillStyle = "#4a443f";
+      g.fillStyle = "#5a534d";
       for (let i = 0; i < 3; i++) {
         const s = hash2(wx * 31 + i, wy * 17 - i);
         g.fillRect(px + Math.floor(s * 30), py + Math.floor(hash2(wy + i, wx - i) * 30), 2, 2);
