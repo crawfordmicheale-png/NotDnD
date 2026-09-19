@@ -35,8 +35,8 @@ export function panel(ctx: CanvasRenderingContext2D, x: number, y: number, w: nu
 export function drawHud(ctx: CanvasRenderingContext2D, g: Game): void {
   if (g.screen === "title") return;
   const p = g.player;
-  const W = g.canvas.width;
-  const H = g.canvas.height;
+  const W = g.viewW;
+  const H = g.viewH;
   ctx.textBaseline = "alphabetic";
 
   // --- Vitals -----------------------------------------------------------

@@ -30,8 +30,8 @@ function lines(ctx: CanvasRenderingContext2D, items: string[], x: number, y: num
 }
 
 export function drawScreens(ctx: CanvasRenderingContext2D, g: Game): void {
-  const W = g.canvas.width;
-  const H = g.canvas.height;
+  const W = g.viewW;
+  const H = g.viewH;
   switch (g.screen) {
     case "title":
       drawTitle(ctx, g, W, H);

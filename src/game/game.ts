@@ -45,6 +45,12 @@ const BOLT_COST = 18;
 const NOVA_COST = 34;
 const MAX_ENEMIES = 110;
 
+/** Logical viewport is capped so the visible slice of the world is the same on every display. */
+const MAX_LOGICAL_WIDTH = 1600;
+/** Backing store is capped so a 4K display does not tank fill rate. */
+const MAX_DEVICE_WIDTH = 2560;
+const MAX_PIXEL_RATIO = 2;
+
 export class Game {
   ctx: CanvasRenderingContext2D;
   input: Input;
@@ -83,6 +89,12 @@ export class Game {
   prompt: string | null = null;
   nearbyItem: Pickup | null = null;
 
+  /** Viewport size in logical pixels; the HUD and overlays lay out against these. */
+  viewW = 1;
+  viewH = 1;
+  /** Backing-store pixels per logical pixel. */
+  pixelRatio = 1;
+
   private lightCanvas: HTMLCanvasElement;
   private lightCtx: CanvasRenderingContext2D;
   minimap!: HTMLCanvasElement;
@@ -105,10 +117,19 @@ export class Game {
   }
 
   resize(): void {
-    const scale = Math.min(1, 1600 / window.innerWidth);
-    this.canvas.width = Math.floor(window.innerWidth * scale);
-    this.canvas.height = Math.floor(window.innerHeight * scale);
-    this.camera.resize(this.canvas.width, this.canvas.height);
+    // Logical size: what the game lays out against. Unchanged by display density.
+    const scale = Math.min(1, MAX_LOGICAL_WIDTH / window.innerWidth);
+    this.viewW = Math.max(1, Math.floor(window.innerWidth * scale));
+    this.viewH = Math.max(1, Math.floor(window.innerHeight * scale));
+
+    // Backing store: logical size times the display density, so nothing is upscaled.
+    const dpr = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
+    this.pixelRatio = Math.max(1, Math.min(dpr, MAX_DEVICE_WIDTH / this.viewW));
+
+    this.canvas.width = Math.round(this.viewW * this.pixelRatio);
+    this.canvas.height = Math.round(this.viewH * this.pixelRatio);
+    this.camera.resize(this.viewW, this.viewH);
+    this.camera.pixelRatio = this.pixelRatio;
     this.lightCanvas.width = this.canvas.width;
     this.lightCanvas.height = this.canvas.height;
   }
@@ -755,7 +776,7 @@ export class Game {
     // Only simulate enemies within a generous radius; the rest sleep.
     const simRange = 1400;
     for (const e of this.enemies) {
-      if (!e.dead && Math.abs(e.x - p.x) > simRange && Math.abs(e.y - p.y) > simRange) continue;
+      if (!e.dead && (Math.abs(e.x - p.x) > simRange || Math.abs(e.y - p.y) > simRange)) continue;
       updateEnemy(e, dt, this.enemyCtx);
     }
     // Separation so packs don't overlap into a single blob.
@@ -1189,6 +1210,8 @@ export class Game {
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.renderLighting();
+    // The HUD and overlays are laid out in logical pixels; scale them up to the backing store.
+    ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0);
     drawHud(ctx, this);
     drawScreens(ctx, this);
   }
@@ -1212,13 +1235,14 @@ export class Game {
 
     const light = (wx: number, wy: number, r: number, strength: number) => {
       const s = cam.worldToScreen(wx, wy);
-      if (s.x < -r || s.y < -r || s.x > W + r || s.y > H + r) return;
-      const g = lc.createRadialGradient(s.x, s.y, 0, s.x, s.y, r * cam.zoom);
+      const rs = r * cam.scale;
+      if (s.x < -rs || s.y < -rs || s.x > W + rs || s.y > H + rs) return;
+      const g = lc.createRadialGradient(s.x, s.y, 0, s.x, s.y, rs);
       g.addColorStop(0, `rgba(255,255,255,${strength})`);
       g.addColorStop(0.5, `rgba(255,255,255,${strength * 0.5})`);
       g.addColorStop(1, "rgba(255,255,255,0)");
       lc.fillStyle = g;
-      lc.fillRect(s.x - r * cam.zoom, s.y - r * cam.zoom, r * 2 * cam.zoom, r * 2 * cam.zoom);
+      lc.fillRect(s.x - rs, s.y - rs, rs * 2, rs * 2);
     };
 
     if (!this.player.dead) light(this.player.x, this.player.y, 430, 1);
