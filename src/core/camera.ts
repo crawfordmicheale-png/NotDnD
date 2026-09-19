@@ -4,16 +4,28 @@ export class Camera {
   x = 0;
   y = 0;
   zoom = 1;
+  /**
+   * Backing-store pixels per logical pixel. The camera's viewport and all world
+   * coordinates stay in logical pixels so that the visible slice of the world
+   * does not change with display density; only the resolution we render it at does.
+   */
+  pixelRatio = 1;
   private shakeAmp = 0;
   private shakeTime = 0;
   shakeX = 0;
   shakeY = 0;
 
+  /** Viewport dimensions are in logical pixels, not backing-store pixels. */
   constructor(public viewW: number, public viewH: number) {}
 
   resize(w: number, h: number): void {
     this.viewW = w;
     this.viewH = h;
+  }
+
+  /** World units to backing-store pixels. */
+  get scale(): number {
+    return this.zoom * this.pixelRatio;
   }
 
   snapTo(x: number, y: number): void {
@@ -54,16 +66,21 @@ export class Camera {
     return this.top + this.viewH / this.zoom;
   }
 
+  /** World point to backing-store pixel coordinates. */
   worldToScreen(wx: number, wy: number): { x: number; y: number } {
-    return { x: (wx - this.left) * this.zoom, y: (wy - this.top) * this.zoom };
+    const s = this.scale;
+    return { x: (wx - this.left) * s, y: (wy - this.top) * s };
   }
 
+  /** Backing-store pixel coordinates back to a world point. */
   screenToWorld(sx: number, sy: number): { x: number; y: number } {
-    return { x: sx / this.zoom + this.left, y: sy / this.zoom + this.top };
+    const s = this.scale;
+    return { x: sx / s + this.left, y: sy / s + this.top };
   }
 
   /** Apply the camera transform so subsequent drawing is in world coordinates. */
   apply(ctx: CanvasRenderingContext2D): void {
-    ctx.setTransform(this.zoom, 0, 0, this.zoom, -this.left * this.zoom, -this.top * this.zoom);
+    const s = this.scale;
+    ctx.setTransform(s, 0, 0, s, -this.left * s, -this.top * s);
   }
 }
