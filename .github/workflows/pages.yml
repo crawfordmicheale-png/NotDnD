@@ -35,6 +35,13 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          # Switch the Pages source to this workflow's artifact. Without it a repo
+          # whose Pages source is still "Deploy from a branch" keeps serving the
+          # repository root, so the published page loads src/main.ts as a module and
+          # the browser blocks it on MIME type. The deploy job reports success either
+          # way, so the breakage is only visible on the live site.
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
