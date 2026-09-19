@@ -1,5 +1,9 @@
 # ASHFALL — Wasteland Reckoning
 
+[![CI](https://github.com/crawfordmicheale-png/NotDnD/actions/workflows/ci.yml/badge.svg)](https://github.com/crawfordmicheale-png/NotDnD/actions/workflows/ci.yml)
+
+**[Play it in your browser](https://crawfordmicheale-png.github.io/NotDnD/)**
+
 A top-down hack and slash RPG set on Earth three hundred years after the Collapse. The old world is rust and rumor; something bled out of the machines when they died, and the wastelanders call it the Glow. It twists what it touches — and it answers, if you learn to ask.
 
 Cross the wastes from the Hearth in the west to the bone-ringed den of the **Ash Warden** in the east. Clear scav camps, hound dens and husk gatherings on the way, scavenge gear, level up, and kill the Warden.
@@ -16,6 +20,8 @@ npm test           # unit tests (vitest)
 ```
 
 Add `?seed=anything` to the URL to play a specific wasteland. Press `N` on the title screen to roll a new one.
+
+Every push runs the type-checker, the unit tests and a production build; pushes to `main` publish the built game to GitHub Pages.
 
 ## Controls
 
@@ -64,5 +70,5 @@ src/
   render/      procedural sprite drawing for every entity
   game/        the Game class: loop, combat resolution, spawning, interactions, lighting
   ui/          HUD (bars, minimap with fog of war, prompts, toasts) and overlay screens
-tests/         vitest unit tests for map connectivity, collision, items and progression
+tests/         vitest unit tests for map connectivity, collision, camera projection, items and progression
 ```
