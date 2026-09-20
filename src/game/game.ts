@@ -1,14 +1,16 @@
 import { Audio } from "../core/audio";
 import { Camera } from "../core/camera";
+import { SpatialGrid } from "../core/grid";
 import { Input } from "../core/input";
 import { angleDiff, angleTo, clamp, dist, normalize } from "../core/math";
 import { Rng, hashSeed } from "../core/rng";
-import { createEnemy, Enemy, EnemyContext, EnemyId, tierMult, updateEnemy } from "../entities/enemies";
+import { createEnemy, Enemy, EnemyContext, EnemyId, MAX_ENEMY_RADIUS, tierMult, updateEnemy } from "../entities/enemies";
 import { ParticleSystem } from "../entities/particles";
 import { Player, StatName } from "../entities/player";
 import { Chest, FloatingText, Pickup, Projectile } from "../entities/types";
 import { Item, itemName, itemScore, rollArmor, rollWeapon, temperCost, temperItem, makeArmor, ARMOR_BASES } from "../items/items";
 import { drawCampfire, drawChest, drawEnemy, drawPickup, drawPlayer, drawProjectile, drawTrader } from "../render/entities";
+import { FlowField } from "../world/flowfield";
 import { Camp, generateMap } from "../world/mapgen";
 import { TileRenderer } from "../world/renderer";
 import { TILE, Tile } from "../world/tiles";
@@ -51,6 +53,11 @@ const MAX_LOGICAL_WIDTH = 1600;
 const MAX_DEVICE_WIDTH = 2560;
 const MAX_PIXEL_RATIO = 2;
 
+/** How often the pursuit flow field is rebuilt, in seconds. */
+const FLOW_REBUILD_INTERVAL = 0.15;
+/** Comfortably wider than the largest pair of enemies, so a 3x3 cell query covers them. */
+const ENEMY_CELL_SIZE = 64;
+
 export class Game {
   ctx: CanvasRenderingContext2D;
   input: Input;
@@ -62,6 +69,7 @@ export class Game {
 
   world!: World;
   tiles!: TileRenderer;
+  flow!: FlowField;
   player = new Player();
   enemies: Enemy[] = [];
   projectiles: Projectile[] = [];
@@ -101,6 +109,10 @@ export class Game {
   fog!: HTMLCanvasElement;
   private lastFrame = 0;
   private enemyCtx!: EnemyContext;
+  private enemyGrid!: SpatialGrid;
+  /** Reused neighbour buffer so the separation pass allocates nothing per frame. */
+  private neighbors = new Int32Array(256);
+  private flowTimer = 0;
 
   constructor(public canvas: HTMLCanvasElement, seedName?: string) {
     this.ctx = canvas.getContext("2d")!;
@@ -142,6 +154,9 @@ export class Game {
     const map = generateMap(this.seed);
     this.world = new World(map);
     this.tiles = new TileRenderer(this.world);
+    this.flow = new FlowField(this.world);
+    this.enemyGrid = new SpatialGrid(this.world.widthPx, this.world.heightPx, ENEMY_CELL_SIZE);
+    this.flowTimer = 0;
     this.enemies = [];
     this.projectiles = [];
     this.pickups = [];
@@ -183,6 +198,7 @@ export class Game {
       player: this.player,
       rng: this.rng,
       enemies: this.enemies,
+      flow: this.flow,
       time: 0,
       fireProjectile: (p) => this.projectiles.push(p),
       damagePlayer: (amount, fx, fy, kb) => this.damagePlayer(amount, fx, fy, kb),
@@ -378,6 +394,7 @@ export class Game {
     }
 
     this.updatePlayer(dt);
+    this.updateFlowField(dt);
     this.updateEnemies(dt);
     this.updateProjectiles(dt);
     this.updatePickups(dt);
@@ -779,11 +796,18 @@ export class Game {
       if (!e.dead && (Math.abs(e.x - p.x) > simRange || Math.abs(e.y - p.y) > simRange)) continue;
       updateEnemy(e, dt, this.enemyCtx);
     }
-    // Separation so packs don't overlap into a single blob.
+    // Separation so packs don't overlap into a single blob. Indexing first keeps this
+    // proportional to how crowded each enemy actually is, instead of sweeping every pair.
+    if (this.neighbors.length < this.enemies.length) this.neighbors = new Int32Array(this.enemies.length * 2);
+    this.enemyGrid.build(this.enemies, isLiveEnemy);
     for (let i = 0; i < this.enemies.length; i++) {
       const a = this.enemies[i];
       if (a.dead) continue;
-      for (let j = i + 1; j < this.enemies.length; j++) {
+      const found = this.enemyGrid.query(a.x, a.y, a.r + MAX_ENEMY_RADIUS, this.neighbors);
+      for (let k = 0; k < found; k++) {
+        const j = this.neighbors[k];
+        // Each pair is resolved once, by its lower index.
+        if (j <= i) continue;
         const b = this.enemies[j];
         if (b.dead) continue;
         const dx = b.x - a.x;
@@ -826,6 +850,18 @@ export class Game {
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       if (this.enemies[i].dead && this.enemies[i].deathTimer > 0.6) this.enemies.splice(i, 1);
     }
+  }
+
+  /**
+   * Refresh the pursuit field on a timer rather than every frame: enemies only consult it
+   * when they have lost sight of the player, and a sixth of a second of staleness is
+   * invisible at walking speed.
+   */
+  private updateFlowField(dt: number): void {
+    this.flowTimer -= dt;
+    if (this.flowTimer > 0) return;
+    this.flowTimer = FLOW_REBUILD_INTERVAL;
+    this.flow.rebuild(this.player.x, this.player.y);
   }
 
   damageEnemy(e: Enemy, amount: number, angle: number, knockback: number, heavy: boolean): void {
@@ -1288,6 +1324,10 @@ export class Game {
     this.ctx.fillStyle = vg;
     this.ctx.fillRect(0, 0, W, H);
   }
+}
+
+function isLiveEnemy(e: Enemy): boolean {
+  return !e.dead;
 }
 
 function salvageValue(item: Item): number {

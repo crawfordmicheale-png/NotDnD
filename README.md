@@ -47,6 +47,8 @@ Every push runs the type-checker, the unit tests and a production build; pushes 
 
 **Combat.** Stamina gates attacks and dodges. Weapons differ in damage, reach, swing arc and speed — a rebar spear pokes far and narrow, a wrecking sledge is slow and hits everything in front of you. Hitting things builds Glow for spells.
 
+Enemies that lose sight of you path around obstacles rather than pressing into them: a breadth-first distance field is rebuilt from your position several times a second, and anything without line of sight walks downhill along it.
+
 **Enemies.**
 - *Scav Raider* — the wasteland's baseline: quick, weak, numerous.
 - *Ash Hound* — fast, lunges from range.
@@ -63,12 +65,12 @@ Every push runs the type-checker, the unit tests and a production build; pushes 
 
 ```
 src/
-  core/        rng, value noise, math, input, camera, synthesized audio
-  world/       tile definitions, procedural map generation, chunk-cached tile renderer, collision
+  core/        rng, value noise, math, input, camera, spatial grid, synthesized audio
+  world/       tile definitions, procedural map generation, chunk-cached tile renderer, collision, pursuit flow field
   entities/    player, enemy definitions + AI (incl. boss), particles, shared types
   items/       weapons, armor, rarity, loot rolls
   render/      procedural sprite drawing for every entity
   game/        the Game class: loop, combat resolution, spawning, interactions, lighting
   ui/          HUD (bars, minimap with fog of war, prompts, toasts) and overlay screens
-tests/         vitest unit tests for map connectivity, collision, camera projection, items and progression
+tests/         vitest unit tests for map connectivity, collision, camera projection, pathfinding, spatial queries, items and progression
 ```
