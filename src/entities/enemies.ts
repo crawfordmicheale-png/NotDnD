@@ -1,5 +1,6 @@
 import { Rng } from "../core/rng";
 import { angleDiff, angleTo, dist, normalize } from "../core/math";
+import { FlowField } from "../world/flowfield";
 import { World } from "../world/world";
 import { Player } from "./player";
 import { Projectile } from "./types";
@@ -35,6 +36,9 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   rust: { id: "rust", name: "Rustknight", hp: 130, speed: 78, damage: 23, r: 16, attackRange: 50, attackCooldown: 1.5, windup: 0.6, armor: 5, xp: 42, scrap: [6, 12], aggroRange: 300, behavior: "melee", color: "#8a5a3a", mass: 2.5 },
   warden: { id: "warden", name: "The Ash Warden", hp: 1150, speed: 92, damage: 28, r: 30, attackRange: 84, attackCooldown: 1.3, windup: 0.8, armor: 4, xp: 520, scrap: [140, 180], aggroRange: 380, behavior: "boss", color: "#3a2f3d", mass: 8 },
 };
+
+/** The largest radius any enemy can have, so neighbour queries know how far to look. */
+export const MAX_ENEMY_RADIUS = Object.values(ENEMY_DEFS).reduce((m, d) => Math.max(m, d.r), 0);
 
 export type EnemyState = "idle" | "chase" | "windup" | "attack" | "recover" | "return" | "dead";
 
@@ -124,6 +128,8 @@ export interface EnemyContext {
   player: Player;
   rng: Rng;
   enemies: Enemy[];
+  /** Distance field toward the player, used when an enemy cannot see them. */
+  flow: FlowField;
   time: number;
   fireProjectile(p: Projectile): void;
   damagePlayer(amount: number, fromX: number, fromY: number, knockback: number): boolean;
@@ -192,11 +198,14 @@ export function updateEnemy(e: Enemy, dt: number, ctx: EnemyContext): void {
         e.state = "return";
         break;
       }
+      // canSee already implies line of sight, so only re-test for enemies chasing from
+      // beyond their aggro range - exactly the ones most likely to be behind something.
+      const hasLos = canSee || dToPlayer < 90 || world.hasLineOfSight(e.x, e.y, player.x, player.y);
       e.facing = angleTo(e.x, e.y, player.x, player.y);
       if (e.def.behavior === "ranged") {
         const preferred = e.def.attackRange * 0.7;
         if (dToPlayer < preferred - 40) moveToward(e, e.x - (player.x - e.x), e.y - (player.y - e.y), e.def.speed * 0.8, dt, ctx);
-        else if (dToPlayer > preferred + 40) moveToward(e, player.x, player.y, e.def.speed, dt, ctx);
+        else if (dToPlayer > preferred + 40) pursue(e, e.def.speed, dt, ctx, hasLos);
         else strafe(e, player, e.def.speed * 0.5, dt, ctx);
         if (e.cooldown <= 0 && dToPlayer < e.def.attackRange && world.hasLineOfSight(e.x, e.y, player.x, player.y)) {
           e.state = "windup";
@@ -207,7 +216,7 @@ export function updateEnemy(e: Enemy, dt: number, ctx: EnemyContext): void {
           e.state = "windup";
           e.timer = e.def.windup;
         } else {
-          moveToward(e, player.x, player.y, e.def.speed, dt, ctx);
+          pursue(e, e.def.speed, dt, ctx, hasLos);
         }
       } else {
         if (dToPlayer <= e.def.attackRange + player.r) {
@@ -219,7 +228,7 @@ export function updateEnemy(e: Enemy, dt: number, ctx: EnemyContext): void {
             strafe(e, player, e.def.speed * 0.4, dt, ctx);
           }
         } else {
-          moveToward(e, player.x, player.y, e.def.speed, dt, ctx);
+          pursue(e, e.def.speed, dt, ctx, hasLos);
         }
       }
       break;
@@ -306,6 +315,23 @@ export function updateEnemy(e: Enemy, dt: number, ctx: EnemyContext): void {
     case "dead":
       break;
   }
+}
+
+/**
+ * Close on the player. With line of sight, steering straight is smoother and reads better;
+ * without it, follow the flow field so walls get walked around rather than leaned on.
+ * An empty field (player out of range, or standing somewhere unreachable) falls back to
+ * the old direct steering, which is no worse than before.
+ */
+function pursue(e: Enemy, speed: number, dt: number, ctx: EnemyContext, hasLos: boolean): void {
+  if (!hasLos) {
+    const wp = ctx.flow.waypoint(e.x, e.y);
+    if (wp) {
+      moveToward(e, wp.x, wp.y, speed, dt, ctx);
+      return;
+    }
+  }
+  moveToward(e, ctx.player.x, ctx.player.y, speed, dt, ctx);
 }
 
 function strafe(e: Enemy, player: Player, speed: number, dt: number, ctx: EnemyContext): void {
